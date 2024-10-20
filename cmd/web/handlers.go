@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"text/template"
 
 	"snippetbox.tanvirRifat.io/internal/models"
 )
@@ -19,31 +18,22 @@ func (app *App) home(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    for _, snippet := range snippets {
-        fmt.Fprintf(w, "%+v\n", snippet)
-    }
 
-    // files := []string{
-    //     "./ui/html/base.tmpl.html",
-    //     "./ui/html/partials/nav.tmpl.html",
-    //     "./ui/html/pages/view.tmpl.html",
-    // }
+  
 
-    // ts, err := template.ParseFiles(files...)
-    // if err != nil {
-    //     app.ServerError(w, r, err)
-    //     return
-    // }
 
-    // err = ts.ExecuteTemplate(w, "base", nil)
-    // if err != nil {
-    //     app.ServerError(w, r, err)
-    // }
+
+    app.render(w, r, http.StatusOK, "home.tmpl.html", templateData{
+        Snippets: snippets,
+    })
+
 }
 
 
 
 func (app *App)snippetView(w http.ResponseWriter, r *http.Request) {
+
+    
         id, err := strconv.Atoi(r.PathValue("id"))
     if err != nil || id < 1 {
         http.NotFound(w, r)
@@ -61,32 +51,11 @@ func (app *App)snippetView(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Write the snippet data as a plain-text HTTP response body.
-    // fmt.Fprintf(w, "%+v", snippet)
-
-
-    files:= []string{
-        "./ui/html/base.tmpl.html",
-        "./ui/html/partials/nav.tmpl.html",
-        "./ui/html/pages/view.tmpl.html",
-    }
-
-    ts, err := template.ParseFiles(files...)
-    
-    if err != nil {
-        app.ServerError(w, r, err)
-        return
-    }
-
-    data:= templateData{
+    app.render(w,r,http.StatusOK,"view.tmpl.html",templateData{
         Snippet: snippet,
-    }
+    })
 
-    err = ts.ExecuteTemplate(w, "base", data)
 
-    if err != nil {
-        app.ServerError(w, r, err)
-    }
 
 }
 

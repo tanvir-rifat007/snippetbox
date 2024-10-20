@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	_ "github.com/go-sql-driver/mysql"
 	"snippetbox.tanvirRifat.io/internal/models"
@@ -16,6 +17,7 @@ import (
 type App struct{
     logger *slog.Logger
     snippets *models.SnippetModel
+    templateCache map[string]*template.Template
 }
 
 func main() {
@@ -33,10 +35,19 @@ func main() {
 
    defer db.Close()
 
+   templateCache,err:=newTemplateCache()
+
+   if err!=nil{
+    logger.Error(err.Error())
+    os.Exit(1)
+   }
+
     // dependency injection:
     app:= &App{
         logger: logger,
         snippets: &models.SnippetModel{DB:db},
+        templateCache: templateCache,
+
     }
 
     addr:=flag.String("addr", ":4000", "HTTP network address")

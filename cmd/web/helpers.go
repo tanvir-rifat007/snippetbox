@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
+	"time"
 )
 
 
@@ -28,11 +30,25 @@ func (app *App) render(w http.ResponseWriter,r *http.Request, status int, page s
     }
 
 
-    w.WriteHeader(status)
+		// creating a buffer 
+		buf:= new(bytes.Buffer)
 
+		// writing the template to the buffer not the whole response like(w)
 
-    err := ts.ExecuteTemplate(w, "base", data)
+    err := ts.ExecuteTemplate(buf, "base", data)
     if err != nil {
         app.ServerError(w, r, err)
     }
+		 w.WriteHeader(status)
+
+		 buf.WriteTo(w)
+
+}
+
+
+func (app *App) newTemplateData(r *http.Request)templateData {
+	return templateData{
+		 CurrentYear: time.Now().Year(),
+	}
+
 }

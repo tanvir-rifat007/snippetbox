@@ -20,6 +20,9 @@ type templateData struct {
 
 	// home.tmpl.html e dekhanor jonne
 	Snippets []models.Snippet
+
+	// create.tmpl e Form er data and error gula dekhanor jonne
+	Form any
 }
 
 

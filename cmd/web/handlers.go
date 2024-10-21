@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
-	"unicode/utf8"
 
 	"snippetbox.tanvirRifat.io/internal/models"
+	"snippetbox.tanvirRifat.io/internal/validator"
 )
 
 // for snippetcreate struct
@@ -17,7 +16,8 @@ type SnippetCreate struct{
     Title string
     Content string
     Expires int
-    FieldErrors map[string]string
+    // FieldErrors map[string]string
+    validator.Validator
 }
 
 func (app *App) home(w http.ResponseWriter, r *http.Request) {
@@ -104,44 +104,25 @@ func (app *App)snippetCreatePost(w http.ResponseWriter, r *http.Request) {
         Title: title,
         Content: content,
         Expires: intExpires,
-        FieldErrors: map[string]string{},
+        
     }
 
+ form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+    form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+    form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+    form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+
+    
 
 
-    if strings.TrimSpace(title)==""{
-        form.FieldErrors["title"]="Title is required"
 
-    }else if utf8.RuneCountInString(title) > 100{
-        form.FieldErrors["title"]="Title is too long"
-    }
-
-    if strings.TrimSpace(content) == "" {
-        form.FieldErrors["content"] = "Content is required"
-    }
-
-    if strings.TrimSpace(expires) == "" {
-        form.FieldErrors["expires"] = "Expiry time is required"
-    }else if intExpires<1 || intExpires>365{
-        form.FieldErrors["expires"]="Expiry time must be between 1 and 365 days"
-    }
-
-    if err!=nil{
-        app.ClientError(w,http.StatusBadRequest)
-        return
-    }
-
-    if len(form.FieldErrors)>0{
-        data:= app.newTemplateData(r)
+        if !form.Valid() {
+        data := app.newTemplateData(r)
         data.Form = form
-
-        
-
-        app.render(w,r,http.StatusUnprocessableEntity,"create.tmpl.html",data)
+        app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
         return
-        
-
     }
+
 
     id,err:=app.snippets.Insert(form.Title,form.Content,form.Expires)
 

@@ -23,6 +23,8 @@ type templateData struct {
 
 	// create.tmpl e Form er data and error gula dekhanor jonne
 	Form any
+
+	Flash string
 }
 
 

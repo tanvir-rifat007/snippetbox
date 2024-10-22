@@ -13,11 +13,13 @@ import (
 // for snippetcreate struct
 
 type SnippetCreate struct{
-    Title string
-    Content string
-    Expires int
+    Title string `form:"title"`
+    Content string `form:"content"`
+    Expires int    `form:"expires"`
     // FieldErrors map[string]string
-    validator.Validator
+
+    // ignore this when parsing using the go-playground/form decoder package
+    validator.Validator `form:"-"`
 }
 
 func (app *App) home(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +63,8 @@ func (app *App)snippetView(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+
+
     data:= app.newTemplateData(r)
     data.Snippet = snippet
 
@@ -85,27 +89,21 @@ func (app *App)snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *App)snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-    err:=r.ParseForm()
+    
 
-    if err!=nil{
-        app.ClientError(w,http.StatusBadRequest)
+    // using the go-playground/form decode package
+
+    var form SnippetCreate
+
+    err:= app.decodePostForm(r,&form)
+
+    if err != nil {
+        app.ClientError(w, http.StatusBadRequest)
         return
     }
 
-    title:=r.PostForm.Get("title")
-    content:=r.PostForm.Get("content")
-    expires:=r.PostForm.Get("expires")
 
 
-
-    intExpires,err:= strconv.Atoi(expires)
-
-    form:= SnippetCreate{
-        Title: title,
-        Content: content,
-        Expires: intExpires,
-        
-    }
 
  form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
     form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
@@ -132,9 +130,37 @@ func (app *App)snippetCreatePost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+
+    // creating a flash/toash message and pass it to the view handler
+    // because after successfully created  we redirect to the snippetview handler
+    app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+
     http.Redirect(w,r,fmt.Sprintf("/snippet/view/%d",id),http.StatusSeeOther)
 
 
 
 
+}
+
+
+func (app *App) userSignup(w http.ResponseWriter,r *http.Request){
+
+    fmt.Fprintln(w,"display the user signup form...")
+
+}
+
+func (app *App) userSignupPost(w http.ResponseWriter, r *http.Request){
+    fmt.Fprintln(w,"Displaying post signup...")
+}
+
+func (app *App) userLogin(w http.ResponseWriter, r *http.Request){
+    fmt.Fprintln(w,"Displaying user login...")
+}
+
+func (app *App) userLoginPost(w http.ResponseWriter, r *http.Request){
+    fmt.Fprintln(w,"Displaying user login post ...")
+}
+
+func (app *App) userLogoutPost(w http.ResponseWriter, r *http.Request){
+    fmt.Fprintln(w,"Displaying the user logout post...")
 }

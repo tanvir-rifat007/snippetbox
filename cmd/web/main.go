@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
 	"log/slog"
@@ -8,7 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"snippetbox.tanvirRifat.io/internal/models"
 )
@@ -18,6 +23,8 @@ type App struct{
     logger *slog.Logger
     snippets *models.SnippetModel
     templateCache map[string]*template.Template
+    formDecoder *form.Decoder
+    sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -42,21 +49,54 @@ func main() {
     os.Exit(1)
    }
 
+   formDecoder:= form.NewDecoder()
+
+
+       sessionManager := scs.New()
+    sessionManager.Store = mysqlstore.New(db)
+    sessionManager.Lifetime = 12 * time.Hour
+
+    // session is used only by https:
+    sessionManager.Cookie.Secure = true
+
+
+    tlsConfig := &tls.Config{
+        CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+    }
+
+
+
     // dependency injection:
     app:= &App{
         logger: logger,
         snippets: &models.SnippetModel{DB:db},
         templateCache: templateCache,
+        formDecoder: formDecoder,
+        sessionManager: sessionManager,
 
     }
 
     addr:=flag.String("addr", ":4000", "HTTP network address")
 
     flag.Parse()
+
+    srv:= &http.Server{
+        Addr: *addr,
+        Handler: app.routes(),
+        // handle any error together with our slog.
+
+        ErrorLog: slog.NewLogLogger(logger.Handler(),slog.LevelError),
+
+        TLSConfig: tlsConfig,
+        IdleTimeout:  time.Minute,
+        ReadTimeout:  5 * time.Second,
+        WriteTimeout: 10 * time.Second,
+
+    }
  
-    logger.Info("starting server","addr",*addr)
+    logger.Info("starting server","addr",srv.Addr)
     
-    err = http.ListenAndServe(*addr, app.routes())
+    err = srv.ListenAndServeTLS("./tls/cert.pem","./tls/key.pem")
 
     logger.Error(err.Error())
 

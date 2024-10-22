@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/go-playground/form/v4"
 )
 
 
@@ -30,6 +33,7 @@ func (app *App) render(w http.ResponseWriter,r *http.Request, status int, page s
     }
 
 
+
 		// creating a buffer 
 		buf:= new(bytes.Buffer)
 
@@ -49,6 +53,35 @@ func (app *App) render(w http.ResponseWriter,r *http.Request, status int, page s
 func (app *App) newTemplateData(r *http.Request)templateData {
 	return templateData{
 		 CurrentYear: time.Now().Year(),
+		 Flash: app.sessionManager.PopString(r.Context(), "flash"),
+
 	}
 
+}
+
+
+func (app *App) decodePostForm(r *http.Request, dst any) error {
+    // Call ParseForm() on the request, in the same way that we did in our
+    // snippetCreatePost handler.
+    err := r.ParseForm()
+    if err != nil {
+        return err
+    }
+
+
+    err = app.formDecoder.Decode(dst, r.PostForm)
+    if err != nil {
+
+			// if we pass the wrong dst then there is the invalidDecoderError
+        
+        var invalidDecoderError *form.InvalidDecoderError
+        
+        if errors.As(err, &invalidDecoderError) {
+            panic(err)
+        }
+
+        return err
+    }
+
+    return nil
 }

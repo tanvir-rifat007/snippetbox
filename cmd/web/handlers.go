@@ -49,7 +49,7 @@ func (app *App) home(w http.ResponseWriter, r *http.Request) {
 
     data := app.newTemplateData(r)
     data.Snippets = snippets
-
+ 
 
 
 
@@ -275,6 +275,8 @@ func (app *App) userLoginPost(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+
+
    
 
 
@@ -298,6 +300,8 @@ func (app *App) userLoginPost(w http.ResponseWriter, r *http.Request) {
     // Add the ID of the current user to the session, so that they are now
     // 'logged in'.
     app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+
+
 
     // Redirect the user to the create snippet page.
     http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)

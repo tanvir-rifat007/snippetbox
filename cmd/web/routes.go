@@ -15,8 +15,9 @@ func (app *App) routes() http.Handler{
 		fileServer:=http.FileServer(neuteredFileSystem{http.Dir("./ui/static/")})
 
 		mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+		// this noSurf is for the csrf token
 
-				dynamic:= alice.New(app.sessionManager.LoadAndSave)
+				dynamic:= alice.New(app.sessionManager.LoadAndSave,noSurf)
 
 
 		mux.Handle("GET /{$}", dynamic.ThenFunc(app.home))

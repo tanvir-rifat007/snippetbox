@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-playground/form/v4"
+	"github.com/justinas/nosurf"
 )
 
 
@@ -57,6 +58,9 @@ func (app *App) newTemplateData(r *http.Request)templateData {
 		 Flash: app.sessionManager.PopString(r.Context(), "flash"),
          IsAuthenticated: app.isAuthenticated(r),
 
+         CSRFToken: nosurf.Token(r),
+         
+
 	}
 
 }
@@ -88,7 +92,8 @@ func (app *App) decodePostForm(r *http.Request, dst any) error {
     return nil
 }
 
-// for authorization:
+// for authorization
+// mane e holo login obosthay asi kina
 
 func (app *App) isAuthenticated(r *http.Request) bool {
     return app.sessionManager.Exists(r.Context(), "authenticatedUserID") 

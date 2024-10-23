@@ -6,6 +6,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/justinas/nosurf"
 )
 
 
@@ -57,6 +59,7 @@ func (app *App) recoverPanic(next http.Handler) http.Handler{
 
 
 // middleware for protected routes:
+// like when we are not logged in then if we visit /snippet/create then going to the /login page
 
 func (app *App) requireAuthentication(next http.Handler) http.Handler{
 	
@@ -72,6 +75,19 @@ func (app *App) requireAuthentication(next http.Handler) http.Handler{
 		next.ServeHTTP(w,r)
 	})
 
+}
+
+// for csrf cookie:
+
+func noSurf(next http.Handler) http.Handler {
+    csrfHandler := nosurf.New(next)
+    csrfHandler.SetBaseCookie(http.Cookie{
+        HttpOnly: true,
+        Path:     "/",
+        Secure:   true,
+    })
+
+    return csrfHandler
 }
 
 

@@ -24,7 +24,11 @@ type templateData struct {
 	// create.tmpl e Form er data and error gula dekhanor jonne
 	Form any
 
+	// for toast message
 	Flash string
+
+	IsAuthenticated bool
+
 }
 
 

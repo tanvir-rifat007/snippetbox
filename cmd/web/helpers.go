@@ -53,7 +53,9 @@ func (app *App) render(w http.ResponseWriter,r *http.Request, status int, page s
 func (app *App) newTemplateData(r *http.Request)templateData {
 	return templateData{
 		 CurrentYear: time.Now().Year(),
+         // for floashig or toast message
 		 Flash: app.sessionManager.PopString(r.Context(), "flash"),
+         IsAuthenticated: app.isAuthenticated(r),
 
 	}
 
@@ -85,3 +87,10 @@ func (app *App) decodePostForm(r *http.Request, dst any) error {
 
     return nil
 }
+
+// for authorization:
+
+func (app *App) isAuthenticated(r *http.Request) bool {
+    return app.sessionManager.Exists(r.Context(), "authenticatedUserID") 
+}
+
